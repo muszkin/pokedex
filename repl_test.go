@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	poke_cache "github.com/muszkin/pokedex/poke-cache"
+	"testing"
+	"time"
+)
 
 func TestCleanInput(t *testing.T) {
 	cases := []struct {
@@ -45,5 +49,37 @@ func TestCleanInput(t *testing.T) {
 				return
 			}
 		}
+	}
+}
+
+func TestCache(t *testing.T) {
+	const testString = "test string"
+	const testKey = "test"
+	const duration4sString = "4s"
+	const duration5sString = "5s"
+	const duration6sString = "6s"
+	duration, _ := time.ParseDuration(duration5sString)
+	longDuration, _ := time.ParseDuration(duration6sString)
+	shorDuration, _ := time.ParseDuration(duration4sString)
+	cache := poke_cache.NewCache(duration)
+
+	cache.Add(testKey, []byte(testString))
+	time.Sleep(longDuration)
+	_, received := cache.Get(testKey)
+	if received {
+		t.Errorf("cache should delete key after passing duration")
+		return
+	}
+
+	cache.Add(testKey, []byte(testString))
+	time.Sleep(shorDuration)
+	val, received := cache.Get(testKey)
+	if !received {
+		t.Errorf("cache should containt key when duration is not passed")
+		return
+	}
+	if string(val) != testString {
+		t.Errorf("value in cache should be the same like value before cache")
+		return
 	}
 }
